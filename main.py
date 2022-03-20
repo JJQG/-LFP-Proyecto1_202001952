@@ -2,7 +2,7 @@ from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
 from prettytable import PrettyTable
-
+#////////////////////////////////////////////////////clase analizador//////////////////////////////////////////
 class analizador:
     def __init__(self) -> None:
         self.tokens = []
@@ -20,8 +20,7 @@ class analizador:
     def agregar_error(self, caracter, x, y):
         self.listaErrores.append(Error('Caracter ' + caracter + ' no reconocido en el lenguaje.', x, y))
 
-    def s0(self, caracter: str):
-        '''Estado S0'''
+    def q0(self, caracter: str):
         if caracter.isalpha():
             self.estado = 1
             self.buffer += caracter
@@ -64,12 +63,12 @@ class analizador:
         elif caracter in ['\t', ' ']:
             self.y += 1
         elif caracter == '$':
-            print('Se terminó el análisis')
+            pass
         else:
             self.agregar_error(caracter, self.x, self.y)
 
-    def s1(self, caracter: str):
-        '''Estado S1'''
+    #--------------------------------automata nodos-----------------------------
+    def q1(self, caracter: str):
         if caracter.isalpha():
             self.estado = 1
             self.buffer += caracter
@@ -80,7 +79,7 @@ class analizador:
             self.y += 1
         else:
             if self.buffer in ['tipo', 'valor', 'fondo', 'valores', 'nombre']:
-                self.agregar_token(self.buffer, self.x, self.y, 'reservada_' + self.buffer)
+                self.agregar_token(self.buffer, self.x, self.y, 'reservada' + self.buffer)
                 self.estado = 0
                 self.i -= 1
 
@@ -89,8 +88,7 @@ class analizador:
                 self.estado = 0
                 self.i -= 1
 
-    def s2(self, caracter: str):
-        '''Estado S2'''
+    def q2(self, caracter: str):
         if caracter == '(")(^")*(")':
             self.estado = 2
             self.buffer += caracter
@@ -100,48 +98,42 @@ class analizador:
             self.estado = 0
             self.i -= 1
 
-    def s3(self, caracter: str):
-        '''Estado S3'''
-        self.agregar_token(self.buffer, self.x, self.y, 'parentesisIzquierdo')
+    def q3(self, caracter: str):
+        self.agregar_token(self.buffer, self.x, self.y, 'virgilla')
         self.estado = 0
         self.i -= 1
 
-    def s4(self, caracter: str):
-        '''Estado S4'''
-        self.agregar_token(self.buffer, self.x, self.y, 'parentesisDerecho')
+    def q4(self, caracter: str):
+        self.agregar_token(self.buffer, self.x, self.y, 'menor que')
         self.estado = 0
         self.i -= 1
 
-    def s5(self, caracter: str):
-        '''Estado S5'''
-        self.agregar_token(self.buffer, self.x, self.y, 'puntoYComa')
+    def q5(self, caracter: str):
+        self.agregar_token(self.buffer, self.x, self.y, 'mayor que')
         self.estado = 0
         self.i -= 1
 
-    def s6(self, caracter: str):
-        '''Estado S6'''
-        self.agregar_token(self.buffer, self.x, self.y, 'signoIgual')
+    def q6(self, caracter: str):
+        self.agregar_token(self.buffer, self.x, self.y, 'dos puntos')
         self.estado = 0
         self.i -= 1
 
-    def s7(self, caracter: str):
-        '''Estado S7'''
+    def q7(self, caracter: str):
         self.agregar_token(self.buffer, self.x, self.y, 'coma')
         self.estado = 0
         self.i -= 1
 
-    def s8(self, caracter: str):
-        '''Estado S7'''
-        self.agregar_token(self.buffer, self.x, self.y, 'coma')
+    def q8(self, caracter: str):
+        self.agregar_token(self.buffer, self.x, self.y, 'abrir corchete')
         self.estado = 0
         self.i -= 1
 
-    def s9(self, caracter: str):
-        '''Estado S7'''
-        self.agregar_token(self.buffer, self.x, self.y, 'coma')
+    def q9(self, caracter: str):
+        self.agregar_token(self.buffer, self.x, self.y, 'cerrar corchete')
         self.estado = 0
         self.i -= 1
 
+    # ----------------------------analizador---------------------------
     def analizar(self, cadena):
         cadena = cadena + '$'
         self.listaErrores = []
@@ -149,30 +141,30 @@ class analizador:
         self.i = 0
         while self.i < len(cadena):
             if self.estado == 0:
-                self.s0(cadena[self.i])
+                self.q0(cadena[self.i])
             elif self.estado == 1:
-                self.s1(cadena[self.i])
+                self.q1(cadena[self.i])
             elif self.estado == 2:
-                self.s2(cadena[self.i])
+                self.q2(cadena[self.i])
             elif self.estado == 3:
-                self.s3(cadena[self.i])
+                self.q3(cadena[self.i])
             elif self.estado == 4:
-                self.s4(cadena[self.i])
+                self.q4(cadena[self.i])
             elif self.estado == 5:
-                self.s5(cadena[self.i])
+                self.q5(cadena[self.i])
             elif self.estado == 6:
-                self.s6(cadena[self.i])
+                self.q6(cadena[self.i])
             elif self.estado == 7:
-                self.s7(cadena[self.i])
+                self.q7(cadena[self.i])
             elif self.estado == 8:
-                self.s8(cadena[self.i])
+                self.q8(cadena[self.i])
             elif self.estado == 9:
-                self.s9(cadena[self.i])
+                self.q9(cadena[self.i])
 
             self.i += 1
 
+    #-----------------------------mostrar datos--------------------------
     def mostrartokens(self):
-        '''Imprime una tabla con los tokens'''
         tabla = PrettyTable()
         tabla.field_names = ["Lexema", "linea", "columna", "tipo"]
         for i in self.listaTokens:
@@ -180,16 +172,14 @@ class analizador:
         print(tabla)
 
     def mostrarerrores(self):
-        '''Imprime una tabla con los errores'''
         tabla = PrettyTable()
         tabla.field_names = ["Error", "linea", "columna"]
         for i in self.listaErrores:
             tabla.add_row([i.descripcion, i.x, i.y])
         print(tabla)
 
-
+#////////////////////////////////////////////////////clase Error//////////////////////////////////////////
 class Error:
-
     def __init__(self, descripcion: str, x: int, y: int):
         self.descripcion = descripcion
         self.x = x
@@ -198,9 +188,8 @@ class Error:
     def imprimirData(self):
         print(self.descripcion, self.x, self.y)
 
-
+#////////////////////////////////////////////////////clase Token//////////////////////////////////////////
 class Token:
-    '''Clase TOken'''
     def __init__(self,lexema : str,x : int,y : int,tipo : str) -> None:
         self.lexema = lexema
         self.x = x
