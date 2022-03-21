@@ -2,6 +2,7 @@ from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
 import webbrowser
+import subprocess
 #////////////////////////////////////////////////////clase analizador//////////////////////////////////////////
 class analizador:
     def __init__(self) -> None:
@@ -18,7 +19,7 @@ class analizador:
         self.buffer = ''
 
     def agregar_error(self, caracter, x, y):
-        self.listaErrores.append(Error('Caracter ' + caracter + ' no reconocido en el lenguaje.', x, y))
+        self.listaErrores.append(Error('Caracter ' + caracter + ' no reconocido', x, y))
 
     def q0(self, caracter: str):
         if caracter.isalpha():
@@ -57,6 +58,10 @@ class analizador:
             self.estado = 9
             self.buffer += caracter
             self.y += 1
+        elif caracter == '"':
+            self.estado = 10
+            self.buffer += caracter
+            self.y += 1
         elif caracter == '\n':
             self.x += 1
             self.y = 0
@@ -78,13 +83,13 @@ class analizador:
             self.buffer += caracter
             self.y += 1
         else:
-            if self.buffer in ['tipo', 'valor', 'fondo', 'valores', 'nombre']:
+            if self.buffer in ['tipo', 'valor', 'fondo', 'valores', 'nombre', 'formulario']:
                 self.agregar_token(self.buffer, self.x, self.y, 'reservada' + self.buffer)
                 self.estado = 0
                 self.i -= 1
 
             else:
-                self.agregar_token(self.buffer, self.x, self.y, 'identificador')
+                self.agregar_token(self.buffer, self.x, self.y, 'cadena')
                 self.estado = 0
                 self.i -= 1
 
@@ -133,6 +138,11 @@ class analizador:
         self.estado = 0
         self.i -= 1
 
+    def q10(self, caracter: str):
+        self.agregar_token(self.buffer, self.x, self.y, 'comillas')
+        self.estado = 0
+        self.i -= 1
+
     # ----------------------------analizador---------------------------
     def analizar(self, cadena):
         cadena = cadena + '$'
@@ -160,6 +170,8 @@ class analizador:
                 self.q8(cadena[self.i])
             elif self.estado == 9:
                 self.q9(cadena[self.i])
+            elif self.estado == 10:
+                self.q10(cadena[self.i])
 
             self.i += 1
 
@@ -222,6 +234,9 @@ class botones:
 
             lexico.analizar(contenido)
 
+def Musuario():
+    path ="manual de usuario.pdf"
+    subprocess.Popen('python.exe',path)
 
 
 
@@ -281,8 +296,6 @@ def tokenhtml():
     webbrowser.open_new_tab('token.html')
 
 b = botones()
-def fijarazul(self):
-    self.ventana.configure(background="blue")
 
 ventana=tk.Tk()
 ventana.title("Proyecto 1 LFP")
@@ -295,8 +308,8 @@ ventana.config(menu=menu)
 opciones1 = tk.Menu(menu)
 opciones1.add_command(label="Reperte de Tokens", command=tokenhtml)
 opciones1.add_command(label="Reporte de Errores", command=erroreshtml)
-opciones1.add_command(label="Manual de Usuario", command=fijarazul)
-opciones1.add_command(label="Manual Tecnico", command=fijarazul)
+opciones1.add_command(label="Manual de Usuario")
+opciones1.add_command(label="Manual Tecnico")
 menu.add_cascade(label="Reportes", menu=opciones1)
 
 area = Text(frame, width=72, height=20)
