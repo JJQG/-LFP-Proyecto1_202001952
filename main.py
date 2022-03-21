@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
-from prettytable import PrettyTable
+import webbrowser
 #////////////////////////////////////////////////////clase analizador//////////////////////////////////////////
 class analizador:
     def __init__(self) -> None:
@@ -89,7 +89,7 @@ class analizador:
                 self.i -= 1
 
     def q2(self, caracter: str):
-        if caracter == '(")(^")*(")':
+        if caracter == '(")'+caracter.isalpha()+'(")':
             self.estado = 2
             self.buffer += caracter
             self.y += 1
@@ -163,22 +163,28 @@ class analizador:
 
             self.i += 1
 
-    #-----------------------------mostrar datos--------------------------
+#-----------------------------mostrar datos--------------------------
     def mostrartokens(self):
-        tabla = PrettyTable()
-        tabla.field_names = ["Lexema", "linea", "columna", "tipo"]
+        d = ""
         for i in self.listaTokens:
-            tabla.add_row([i.lexema, i.x, i.y, i.tipo])
-        print(tabla)
+            dato = '<tr><td>' + str(i.lexema) + '</td>' \
+                   '<td>' + str(i.x) + '</td>' \
+                   '<td>' + str(i.y) + '</td>' \
+                    '<td>' + str(i.tipo) + '</td>'
+            d += dato
+        return d
 
     def mostrarerrores(self):
-        tabla = PrettyTable()
-        tabla.field_names = ["Error", "linea", "columna"]
+        d = ""
         for i in self.listaErrores:
-            tabla.add_row([i.descripcion, i.x, i.y])
-        print(tabla)
+            dato='<tr><td>'+str(i.descripcion)+'</td>' \
+                '<td>'+str(i.x)+'</td>' \
+                '<td>'+str(i.y)+'</td>'
+            d += dato
+        return d
 
-#////////////////////////////////////////////////////clase Error//////////////////////////////////////////
+
+ #////////////////////////////////////////////////////clase Error//////////////////////////////////////////
 class Error:
     def __init__(self, descripcion: str, x: int, y: int):
         self.descripcion = descripcion
@@ -200,38 +206,114 @@ class Token:
         print(self.lexema, self.x, self.y, self.tipo)
 
 lexico = analizador()
-def leer():
-    archivo = filedialog.askopenfilename(initialdir="/",
+class botones:
+    def leer(self):
+        self.archivo = filedialog.askopenfilename(initialdir="/",
                                          title="Select a File",
                                          filetypes=(("Text files", "*.form*"), ("all files", "*.*")))
 
-    if archivo != '':
-        archi1 = open(archivo, "r", encoding="utf-8")
-        contenido = archi1.read()
-        archi1.close()
-        area.delete("1.0", tk.END)
-        area.insert("1.0", contenido)
+    def botonanalizar(self):
+        if self.archivo != '':
+            archi1 = open(self.archivo, "r", encoding="utf-8")
+            contenido = archi1.read()
+            archi1.close()
+            area.delete("1.0", tk.END)
+            area.insert("1.0", contenido)
 
-        lexico.analizar(contenido)
-        lexico.mostrartokens()
-        lexico.mostrarerrores()
+            lexico.analizar(contenido)
 
 
-ventana = Tk()
+
+
+def erroreshtml():
+    f = open('proyecto.html', 'w')
+    t = lexico.mostrarerrores()
+    mensaje = '<!DOCTYPE html>' \
+              '<html>' \
+              '<head>' \
+              '<meta charset = "utf-8"> ' \
+              '<title>Reporte de Errores</title>' \
+              '</head>' \
+              '<body> ' \
+              '<h1>Reporte de Errores</h1> '\
+              '<table class="default">' \
+              '<tr>' \
+              '<td>'+"Error"+'</td>' \
+              '<td>'+"linea"+'</td>' \
+              '<td>'+"columna"+'</td>' \
+              '</tr>' \
+              +t+\
+              '</table>' \
+              '</body> ' \
+              '</html>'
+
+
+    f.write(mensaje)
+    f.close()
+    webbrowser.open_new_tab('proyecto.html')
+
+def tokenhtml():
+    f = open('token.html', 'w')
+    t = lexico.mostrartokens()
+    mensaje = '<!DOCTYPE html>' \
+              '<html>' \
+              '<head>' \
+              '<meta charset = "utf-8"> ' \
+              '<title>Reporte de Tokens</title>' \
+              '</head>' \
+              '<body> ' \
+              '<h1>Reporte de Tokens</h1> ' \
+              '<table class="default">' \
+              '<tr>' \
+              '<td>'+"Lexema"+'</td>' \
+              '<td>'+"linea"+'</td>' \
+              '<td>'+"columna"+'</td>' \
+              '<td>' + "tipo" + '</td>' \
+              '</tr>' \
+              +t+\
+              '</table>' \
+              '</body> ' \
+              '</html>'
+
+
+    f.write(mensaje)
+    f.close()
+    webbrowser.open_new_tab('token.html')
+
+b = botones()
+def fijarazul(self):
+    self.ventana.configure(background="blue")
+
+ventana=tk.Tk()
 ventana.title("Proyecto 1 LFP")
+
 frame = Frame(ventana, width=600, height=450)
 frame.pack()
-reportes = Label(frame, text="Reportes: ")
-reportes.place(x=350, y=10)
+
+menu = tk.Menu(ventana)
+ventana.config(menu=menu)
+opciones1 = tk.Menu(menu)
+opciones1.add_command(label="Reperte de Tokens", command=tokenhtml)
+opciones1.add_command(label="Reporte de Errores", command=erroreshtml)
+opciones1.add_command(label="Manual de Usuario", command=fijarazul)
+opciones1.add_command(label="Manual Tecnico", command=fijarazul)
+menu.add_cascade(label="Reportes", menu=opciones1)
+
 area = Text(frame, width=72, height=20)
 area.place(x=10, y=50)
+
 scroll = Scrollbar(frame, command=area.yview())
 area.config(yscrollcommand=scroll.set)
-menu = Button(frame, text="Archivo", command=leer)
+
+menu = Button(frame, text="Archivo", command=b.leer)
 menu.place(x=240, y=400)
-analizar = Button(frame, text="Analizar")
+#
+analizar = Button(frame, text="Analizar", command=b.botonanalizar)
 analizar.place(x=310, y=400)
+
 ventana.mainloop()
+
+
 
 
 
